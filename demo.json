@@ -1,0 +1,62 @@
+
+
+{
+  "columns": [
+    {
+      "boxes": [
+        {
+          "boxesType": "room",
+          "border": "leftTop",
+          "place_id": 1,
+          "in_path": false
+        },
+        {
+          "boxesType": "room",
+          "border": "top",
+          "place_id": 1,
+          "in_path": false
+        },
+        {
+          "boxesType": "hallway",
+          "border": "none",
+          "place_id": 2,
+          "in_path": false
+        },
+        {
+          "boxesType": "room",
+          "border": "topRightBottom",
+          "place_id": 1,
+          "in_path": false
+        }
+      ]
+    },
+    {
+      "boxes": [
+        {
+          "boxesType": "room",
+          "border": "leftBottom",
+          "place_id": 1,
+          "in_path": false
+        },
+        {
+          "boxesType": "rightBottom",
+          "border": "top",
+          "place_id": 1,
+          "in_path": false
+        },
+        {
+          "boxesType": "hallway",
+          "border": "none",
+          "place_id": 2,
+          "in_path": false
+        },
+        {
+          "boxesType": "room",
+          "border": "topRightBottom",
+          "place_id": 3,
+          "in_path": false
+        }
+      ]
+    }
+    ]
+}
