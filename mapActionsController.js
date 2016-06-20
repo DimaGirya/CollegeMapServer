@@ -30,35 +30,63 @@ exports.getMapToDisplay = function(req,res) {
         var result = calculateMap(data);
         res.status(status).send(result)
     });
-  
+
 };
 
 function calculateMap(places) {
-    var map = [ [],[],[],[],[], [], [], [], [], [] ];
-    for(var i=0;i<places.length;i++){
+    var map = [[], [], [], [], [], [], [], [], [], []];
+    var numberOfRows = places.length;
+    for (var i = 0; i < numberOfRows; i++) {
         var place = places[i];
-        var coord_y = place.coord_y;
-        var height = place.height;
-        var coord_x = place.coord_x;
-        var width = place.width;
-        for (var j=coord_y;j<coord_y+height;j++){
-            for (var k=coord_x;k<coord_x+width;k++){
-                var cell = {type: place.type, border: "none", status:place.status,place_id: place.id, in_path: false};
+        var coordY = place.coord_y;
+        //var height = place.height;
+        var coordX = place.coord_x;
+        //var width = place.width;
+        //var roomHeight = coordY + height;
+        var roomHeight = coordY + place.height;
+        for (var j = coordY; j < roomHeight; j++) {
+            var roomWidth = coordX + place.width;
+            for (var k = coordX; k < roomWidth; k++) {
+                var cell = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false};
                 map[j][k] = cell;
             }
         }
     }
-    /*
-    var cell_counter=0;
-    for (var p=0;p<map.length;p++){
-        var row=map[p];
-        for(var q=0;q<row.length;q++){
-            map[p][q].box_id = cell_counter;
-            cell_counter++;
+    calculateMapsBorders(map);
+    return JSON.stringify(map)
+}
+
+function calculateMapsBorders(map) {
+    for(var y = 0; y < map.length; y++) {
+        var current_row = map[y];
+        for(var x = 0; x < current_row.length; x++) {
+            if(map[y-1]===undefined) {
+                map[y][x].border+="Top";
+            }
+            else if(map[y][x].place_id !== map[y-1][x].place_id){
+                map[y][x].border+="Top"
+            }
+            if(map[y][x+1]===undefined) {
+                map[y][x].border+="Right";
+            }
+            else if(map[y][x].place_id !== map[y][x+1].place_id){
+                map[y][x].border+="Right"
+            }
+            if(map[y+1][x]===undefined) {
+                map[y][x].border+="Bottom";
+            }
+            else if(map[y][x].place_id !== map[y+1][x].place_id){
+                map[y][x].border+="Bottom"
+            }
+
+            if(map[y][x-1]===undefined) {
+                map[y][x].border+="Left";
+            }
+            else if(map[y][x].place_id !== map[y][x-1].place_id){
+                map[y][x].border+="Left"
+            }
         }
     }
-    */
-    return JSON.stringify(map);
 }
 
 
@@ -96,23 +124,23 @@ exports.setStatusRoom = function(req,res) { //todo set status in data base
             console.log(err);
             throw err;
         }
-       if(doc.type != 'class'){
+        if(doc.type != 'class'){
             response =  [{"message":"Room is not class. Can't change status of room"}];
             res.status(status).send(response);
         }
-       else if(doc.status == roomStatus){
+        else if(doc.status == roomStatus){
             response =  [{"message":"Same status"}];
             res.status(status).send(response);
         }
         else{
-           var query = doc.update({
-               $set:{'status':roomStatus}
-           });
-           query.exec(function (err,results) {
-               if(err)throw err;
-               response =  [{"message":"Save status done"}];
-               res.status(status).send(response);
-           });
+            var query = doc.update({
+                $set:{'status':roomStatus}
+            });
+            query.exec(function (err,results) {
+                if(err)throw err;
+                response =  [{"message":"Save status done"}];
+                res.status(status).send(response);
+            });
         }
     });
 
