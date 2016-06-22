@@ -2,6 +2,7 @@ const Graph = require('node-dijkstra');
 var mongoose = require('mongoose');
 var placesSchema = require('./placesSchema');
 var DB = require('./database');
+
 // get all places
 exports.getMap = function(req,res) {
     var status = 200;
@@ -15,8 +16,6 @@ exports.getMap = function(req,res) {
         res.status(status).send(data)
     });
 };
-
-
 
 exports.getMapToDisplay = function(req,res) {
     var status = 200;
@@ -39,16 +38,12 @@ function calculateMap(places) {
     for (var i = 0; i < numberOfRows; i++) {
         var place = places[i];
         var coordY = place.coord_y;
-        //var height = place.height;
         var coordX = place.coord_x;
-        //var width = place.width;
-        //var roomHeight = coordY + height;
         var roomHeight = coordY + place.height;
         for (var j = coordY; j < roomHeight; j++) {
             var roomWidth = coordX + place.width;
             for (var k = coordX; k < roomWidth; k++) {
-                var cell = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false};
-                map[j][k] = cell;
+                 map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false};
             }
         }
     }
@@ -57,9 +52,11 @@ function calculateMap(places) {
 }
 
 function calculateMapsBorders(map) {
-    for(var y = 0; y < map.length; y++) {
+    var mapLength =  map.length;
+    for(var y = 0; y <mapLength; y++) {
         var current_row = map[y];
-        for(var x = 0; x < current_row.length; x++) {
+        var currentRowLength  = current_row.length;
+        for(var x = 0; x < currentRowLength; x++) {
             if(map[y-1]===undefined) {
                 map[y][x].border+="Top";
             }
@@ -89,8 +86,6 @@ function calculateMapsBorders(map) {
     }
 }
 
-
-
 // get id's of places of the shortest path and cost
 exports.getPath = function(req,res) { //todo validation
     var from = req.params.from;
@@ -98,22 +93,19 @@ exports.getPath = function(req,res) { //todo validation
     console.log("from:"+from);
     console.log("to:"+to);
     var status = 200;
-
     placesSchema.find({},function (err,data) {
         if(err){
             throw err;
         }
-        console.log("size data:"+data.length);
         var temp  = JSON.stringify(data);
-        var places = JSON.parse(temp);  // todo need to change
-
+        var places = JSON.parse(temp);
         var route = getGraph(places);
         var message = route.path(from,to,{cost:true});
         res.status(status).send(message)
     });
 };
 
-exports.setStatusRoom = function(req,res) { //todo set status in data base
+exports.setStatusRoom = function(req,res) {
     var status = 200;
     var roomId = req.params.room; //id of room
     var roomStatus = req.params.status; //status string
@@ -143,14 +135,9 @@ exports.setStatusRoom = function(req,res) { //todo set status in data base
             });
         }
     });
-
-//  var response = [{"Response":"Room:"+room+" RoomStatus:"+roomStatus}];
-
 };
 
-
-// is function getRoomStatus needed?
-exports.getRoomStatus = function(req,res) { //todo make query by param :room
+exports.getRoomStatus = function(req,res) { 
     placesSchema.find({},function (err,data) {
         if(err){
             throw err;
@@ -159,11 +146,6 @@ exports.getRoomStatus = function(req,res) { //todo make query by param :room
         res.status(200).send(room_status)
     });
 };
-
-
-
-//console.log(route.path('1', '4',{cost:true}));
-
 
 function getGraph(places) {
     var graph = new Graph();

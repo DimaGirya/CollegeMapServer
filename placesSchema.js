@@ -10,6 +10,7 @@ var places = new Schema({
     height:{type:Number,required:true},
     coord_x:{type:Number,required:true},
     coord_y:{type:Number,required:true},
+    comments:{type:Array,required:false},
     neighbors: [{
         Id:String,
         weight:Number
