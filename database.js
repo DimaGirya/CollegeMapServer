@@ -3,7 +3,8 @@
 var flagIsConnection =  false;
 var mongoose = require('mongoose');
 config = {
-    mongoUrl:'mongodb://ColleageMap:shenkarmap@ds013414.mlab.com:13414/collegemap'
+   // mongoUrl:'mongodb://ColleageMap:shenkarmap@ds013414.mlab.com:13414/collegemap'
+    mongoUrl:'mongodb://collegemap:collegemap@ds011725.mlab.com:11725/collegemapdb'
 };
 
 //The server optionauto_reconnectis defaulted to true

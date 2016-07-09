@@ -33,7 +33,8 @@ exports.getMapToDisplay = function(req,res) {
 };
 
 function calculateMap(places) {
-    var map = [[], [], [], [], [], [], [], [], [], []];
+    console.log(places);
+    var map = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],[],[],[]];
     var numberOfRows = places.length;
     for (var i = 0; i < numberOfRows; i++) {
         var place = places[i];
@@ -42,9 +43,12 @@ function calculateMap(places) {
         var roomHeight = coordY + place.height;
         for (var j = coordY; j < roomHeight; j++) {
             var roomWidth = coordX + place.width;
+            console.log( map[j]);
             for (var k = coordX; k < roomWidth; k++) {
-                 map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false};
+                 map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false,
+                 coord_x:j,coord_y:k};
             }
+            console.log( map[j]);
         }
     }
     calculateMapsBorders(map);
@@ -57,30 +61,49 @@ function calculateMapsBorders(map) {
         var current_row = map[y];
         var currentRowLength  = current_row.length;
         for(var x = 0; x < currentRowLength; x++) {
-            if(map[y-1]===undefined) {
-                map[y][x].border+="Top";
-            }
-            else if(map[y][x].place_id !== map[y-1][x].place_id){
-                map[y][x].border+="Top"
-            }
-            if(map[y][x+1]===undefined) {
-                map[y][x].border+="Right";
-            }
-            else if(map[y][x].place_id !== map[y][x+1].place_id){
-                map[y][x].border+="Right"
-            }
-            if(map[y+1][x]===undefined) {
-                map[y][x].border+="Bottom";
-            }
-            else if(map[y][x].place_id !== map[y+1][x].place_id){
-                map[y][x].border+="Bottom"
-            }
 
-            if(map[y][x-1]===undefined) {
-                map[y][x].border+="Left";
-            }
-            else if(map[y][x].place_id !== map[y][x-1].place_id){
-                map[y][x].border+="Left"
+            console.log("y:");
+            console.log(y);
+            console.log("x:");
+            console.log(x);
+            try {
+                if(map[y][x].type == "hallway"){
+                    continue;
+                }
+                if (map[y - 1] === undefined) {
+                    map[y][x].border += "Top";
+                }
+                else if (map[y][x].place_id !== map[y - 1][x].place_id) {
+                    map[y][x].border += "Top"
+                }
+
+                if (map[y][x + 1] === undefined) {
+                    map[y][x].border += "Right";
+                }
+                else if (map[y][x].place_id !== map[y][x + 1].place_id) {
+                    map[y][x].border += "Right"
+                }
+
+                if (map[y + 1][x] === undefined) {
+                    map[y][x].border += "Bottom";
+                }
+                else if (map[y][x].place_id !== map[y + 1][x].place_id) {
+                    map[y][x].border += "Bottom"
+                }
+
+                if (map[y][x - 1] === undefined) {
+                    map[y][x].border += "Left";
+                }
+                else if (map[y][x].place_id !== map[y][x - 1].place_id) {
+                    map[y][x].border += "Left"
+                }
+
+            console.log(map[y][x].border);
+            console.log("place ID");
+            console.log(map[y][x].place_id);
+        }
+            catch(e){
+                console.log(e);
             }
         }
     }
@@ -97,6 +120,7 @@ exports.getPath = function(req,res) { //todo validation
         if(err){
             throw err;
         }
+       // console.log(data);
         var temp  = JSON.stringify(data);
         var places = JSON.parse(temp);
         var route = getGraph(places);
@@ -150,7 +174,7 @@ exports.getRoomStatus = function(req,res) {
 function getGraph(places) {
     var graph = new Graph();
     var sizeArray = places.length;
-
+    //console.log(places);
     for (var i = 0; i < sizeArray; i++) {
         var sizeNeighbors = places[i].neighbors.length;
         var neighbors = places[i].neighbors;
@@ -162,10 +186,7 @@ function getGraph(places) {
             cost = parseInt(neighbors[j].weight);
             temp[neighbor] = cost;
         }
-        console.log(typeof  places[i]);
-        console.log(places[i].Id);
-        console.log(temp);
-        graph.addNode(places[i].Id.toString(), temp);
+        graph.addNode(places[i].id.toString(), temp);
     }
     console.log(graph);
     return graph;
