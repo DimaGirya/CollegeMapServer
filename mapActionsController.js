@@ -4,36 +4,37 @@ var placesSchema = require('./placesSchema');
 var DB = require('./database');
 
 // get all places
-exports.getMap = function(req,res) {
-    var status = 200;
+var mapToDisplay = undefined;
+var map = undefined;
+console.log("Server start");
+function getMapFromDb(){
     if(!DB.isConnectedToDB()){
-        res.status(status).send({"message":"No connection to data base.Try again leter"});
+         mapToDisplay = undefined;
+         map = undefined;
+        console.error("No connected to db. Can't calculate map!")
     }
     placesSchema.find({},function (err,data) {
         if(err){
             throw err;
         }
-        res.status(status).send(data)
+        map = data;
+        mapToDisplay = calculateMap(data);
+        console.log("Map calculate done.")
     });
+};
+
+exports.getMap = function(req,res) {
+    console.log("getMap call");
+    res.status(200).send(map)
 };
 
 exports.getMapToDisplay = function(req,res) {
-    var status = 200;
-    if(!DB.isConnectedToDB()){
-        res.status(status).send({"message":"No connection to data base.Try again leter"});
-    }
-    placesSchema.find({},function (err,data) {
-        if(err){
-            throw err;
-        }
-        var result = calculateMap(data);
-        res.status(status).send(result)
-    });
-
+    console.log("getMapToDisplay call");
+    res.status(200).send(mapToDisplay);
 };
 
 function calculateMap(places) {
-    console.log(places);
+   // console.log(places);
     var map = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],[],[],[]];
     var numberOfRows = places.length;
     for (var i = 0; i < numberOfRows; i++) {
@@ -43,16 +44,14 @@ function calculateMap(places) {
         var roomHeight = coordY + place.height;
         for (var j = coordY; j < roomHeight; j++) {
             var roomWidth = coordX + place.width;
-            console.log( map[j]);
             for (var k = coordX; k < roomWidth; k++) {
                  map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false,
                  coord_x:j,coord_y:k};
             }
-            console.log( map[j]);
         }
     }
     calculateMapsBorders(map);
-    return JSON.stringify(map)
+    return map;
 }
 
 function calculateMapsBorders(map) {
@@ -61,11 +60,6 @@ function calculateMapsBorders(map) {
         var current_row = map[y];
         var currentRowLength  = current_row.length;
         for(var x = 0; x < currentRowLength; x++) {
-
-            console.log("y:");
-            console.log(y);
-            console.log("x:");
-            console.log(x);
             try {
                 if(map[y][x].type == "hallway"){
                     continue;
@@ -97,20 +91,15 @@ function calculateMapsBorders(map) {
                 else if (map[y][x].place_id !== map[y][x - 1].place_id) {
                     map[y][x].border += "Left"
                 }
-
-            console.log(map[y][x].border);
-            console.log("place ID");
-            console.log(map[y][x].place_id);
         }
-            catch(e){
-                console.log(e);
-            }
+            catch(e){}
         }
     }
 }
 
 // get id's of places of the shortest path and cost
-exports.getPath = function(req,res) { //todo validation
+exports.getPath = function(req,res) {
+    console.log("getPath call");
     var from = req.params.from;
     var to = req.params.to;
     console.log("from:"+from);
@@ -120,7 +109,6 @@ exports.getPath = function(req,res) { //todo validation
         if(err){
             throw err;
         }
-       // console.log(data);
         var temp  = JSON.stringify(data);
         var places = JSON.parse(temp);
         var route = getGraph(places);
@@ -130,9 +118,12 @@ exports.getPath = function(req,res) { //todo validation
 };
 
 exports.setStatusRoom = function(req,res) {
+    console.log("setStatusRoom call");
     var status = 200;
     var roomId = req.params.room; //id of room
     var roomStatus = req.params.status; //status string
+    console.log(roomId);
+    console.log(roomStatus);
     var response;
     var query = placesSchema.findOne().where({id:roomId});
     query.exec(function (err,doc) {
@@ -153,7 +144,35 @@ exports.setStatusRoom = function(req,res) {
                 $set:{'status':roomStatus}
             });
             query.exec(function (err,results) {
-                if(err)throw err;
+                if(err) {
+                    throw err;
+                }
+                var size = map.length;
+                for(var i = 0; i < size; i++){
+                    if(map[i].id == roomId){
+                       // console.log(map[i]);
+                        map[i].status =  roomStatus;
+                        break;
+                    }
+                }
+                var mapSizeX = mapToDisplay.length;
+                var mapSizeY;
+                for (var j = 0 ; j < mapSizeX; j++) {
+                    if(mapToDisplay[j] === undefined){
+                        console.log(j);
+                        continue
+                    }
+                    mapSizeY = mapToDisplay[j].length;
+                    for (var k = 0; k < mapSizeY; k++) {
+                        try {
+                            console.log(mapToDisplay[j][k]);
+                            if (mapToDisplay[j][k].place_id == roomId) {
+                                mapToDisplay[j][k].status = roomStatus;
+                            }
+                        }
+                        catch(e){}
+                }
+            }
                 response =  [{"message":"Save status done"}];
                 res.status(status).send(response);
             });
@@ -188,6 +207,27 @@ function getGraph(places) {
         }
         graph.addNode(places[i].id.toString(), temp);
     }
-    console.log(graph);
     return graph;
 }
+setTimeout(function () {    //wait for mongoose connection established
+    console.log("Load map....");
+    var count = 1;
+    console.log('Attempt number  '+count);
+    getMapFromDb();
+    setTimeout(function () {    //wait for get data from mongo db + calculate map
+        if (mapToDisplay !== undefined) {
+            console.log('Server ready to work.');
+            return;
+        }
+        var intervalObject = setInterval(function () {  // try again if attempt fail
+            getMapFromDb();
+            count++;
+            console.log('Attempt number  ' + count);
+            console.log(typeof mapToDisplay);
+            if (mapToDisplay !== undefined) {
+                console.log('Server ready to work.');
+                clearInterval(intervalObject);
+            }
+        }, 3000);
+    },3000);
+},3000);
