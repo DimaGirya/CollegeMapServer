@@ -180,13 +180,14 @@ exports.setStatusRoom = function(req,res) {
     });
 };
 
-exports.getRoomStatus = function(req,res) { 
-    placesSchema.find({},function (err,data) {
+exports.getRoomStatus = function(req,res) {
+    var roomId = req.params.roomId;
+    console.log(roomId);
+    placesSchema.find({"id":roomId},function (err,data) {
         if(err){
             throw err;
         }
-        var room_status;
-        res.status(200).send(room_status)
+        res.status(200).send(data)
     });
 };
 
@@ -209,6 +210,7 @@ function getGraph(places) {
     }
     return graph;
 }
+
 setTimeout(function () {    //wait for mongoose connection established
     console.log("Load map....");
     var count = 1;
