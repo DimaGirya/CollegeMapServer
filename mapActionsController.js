@@ -211,6 +211,38 @@ function getGraph(places) {
     return graph;
 }
 
+exports.addComments = function (req,res) {
+    var roomId = req.params.roomId;
+    var userName = req.params.userName;
+    var commentStr = req.params.comment;
+    var date = new Date();
+    var comment = {};
+    comment["userName"] = userName;
+    comment["commentStr"] = commentStr;
+    comment["date"] = date;
+    var query = placesSchema.findOne().where({id:roomId});
+    query.exec(function (err,doc) {
+        if(err) {
+            throw err;
+        }
+        var temp = doc.comments;
+        temp.push(comment);
+        var query = doc.update({
+            $set:{'comments':temp}
+        });
+        query.exec(function (err,results) {
+            if (err) {
+                throw err;
+            }
+            else {
+                res.status(200).send(results)
+            }
+        });
+
+    });
+ //
+};
+
 setTimeout(function () {    //wait for mongoose connection established
     console.log("Load map....");
     var count = 1;
