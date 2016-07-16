@@ -35,7 +35,6 @@ exports.getMapToDisplay = function(req,res) {
 };
 
 function calculateMap(places) {
-   // var map = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],[],[],[]];
     var map = [];
     var numberOfRows = places.length;
     for (var i = 0; i < numberOfRows; i++) {
