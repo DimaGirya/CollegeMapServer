@@ -2,7 +2,7 @@ const Graph = require('node-dijkstra');
 var mongoose = require('mongoose');
 var placesSchema = require('./placesSchema');
 var DB = require('./database');
-
+var errorStr = "An error occurred. Error code:";
 // get all places
 var mapToDisplay = undefined;
 var map = undefined;
@@ -15,7 +15,8 @@ function getMapFromDb(){
     }
     placesSchema.find({},function (err,data) {
         if(err){
-            throw err;
+            console.log(err);
+            res.status(500).send(errorStr+"0");
         }
         map = data;
         mapToDisplay = calculateMap(data);
@@ -34,8 +35,8 @@ exports.getMapToDisplay = function(req,res) {
 };
 
 function calculateMap(places) {
-   // console.log(places);
-    var map = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],[],[],[]];
+   // var map = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],[],[],[]];
+    var map = [];
     var numberOfRows = places.length;
     for (var i = 0; i < numberOfRows; i++) {
         var place = places[i];
@@ -45,6 +46,9 @@ function calculateMap(places) {
         for (var j = coordY; j < roomHeight; j++) {
             var roomWidth = coordX + place.width;
             for (var k = coordX; k < roomWidth; k++) {
+                while(map[j] === undefined){
+                    map.push([]);
+                }
                  map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false,
                  coord_x:j,coord_y:k};
             }
@@ -99,15 +103,13 @@ function calculateMapsBorders(map) {
 
 // get id's of places of the shortest path and cost
 exports.getPath = function(req,res) {
-    console.log("getPath call");
     var from = req.params.from;
     var to = req.params.to;
-    console.log("from:"+from);
-    console.log("to:"+to);
     var status = 200;
     placesSchema.find({},function (err,data) {
         if(err){
-            throw err;
+            console.log(err);
+            res.status(500).send(errorStr+"6");
         }
         var temp  = JSON.stringify(data);
         var places = JSON.parse(temp);
@@ -118,18 +120,15 @@ exports.getPath = function(req,res) {
 };
 
 exports.setStatusRoom = function(req,res) {
-    console.log("setStatusRoom call");
     var status = 200;
     var roomId = req.params.room; //id of room
     var roomStatus = req.params.status; //status string
-    console.log(roomId);
-    console.log(roomStatus);
     var response;
     var query = placesSchema.findOne().where({id:roomId});
     query.exec(function (err,doc) {
         if(err) {
             console.log(err);
-            throw err;
+            res.status(500).send(errorStr+"1");
         }
         if(doc.type != 'class'){
             response =  [{"message":"Room is not class. Can't change status of room"}];
@@ -145,7 +144,8 @@ exports.setStatusRoom = function(req,res) {
             });
             query.exec(function (err,results) {
                 if(err) {
-                    throw err;
+                    console.log(err);
+                    res.status(500).send(errorStr+"2");
                 }
                 var size = map.length;
                 for(var i = 0; i < size; i++){
@@ -182,10 +182,10 @@ exports.setStatusRoom = function(req,res) {
 
 exports.getRoomStatus = function(req,res) {
     var roomId = req.params.roomId;
-    console.log(roomId);
     placesSchema.find({"id":roomId},function (err,data) {
         if(err){
-            throw err;
+            console.log(err);
+            res.status(500).send(errorStr+"3");
         }
         res.status(200).send(data)
     });
@@ -223,7 +223,8 @@ exports.addComments = function (req,res) {
     var query = placesSchema.findOne().where({id:roomId});
     query.exec(function (err,doc) {
         if(err) {
-            throw err;
+            console.log(err);
+            res.status(500).send(errorStr+"4");
         }
         var temp = doc.comments;
         temp.push(comment);
@@ -232,7 +233,8 @@ exports.addComments = function (req,res) {
         });
         query.exec(function (err,results) {
             if (err) {
-                throw err;
+                console.log(err);
+                res.status(500).send(errorStr+"5");
             }
             else {
                 res.status(200).send(results)
