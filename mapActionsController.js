@@ -3,7 +3,6 @@ var mongoose = require('mongoose');
 var placesSchema = require('./placesSchema');
 var DB = require('./database');
 var errorStr = "An error occurred. Error code:";
-// get all places
 var mapToDisplay = undefined;
 var map = undefined;
 console.log("Server start");
@@ -22,7 +21,7 @@ function getMapFromDb(){
         mapToDisplay = calculateMap(data);
         console.log("Map calculate done.")
     });
-};
+}
 
 exports.getMap = function(req,res) {
     console.log("getMap call");
@@ -113,7 +112,7 @@ exports.getPath = function(req,res) {
         var temp  = JSON.stringify(data);
         var places = JSON.parse(temp);
         var route = getGraph(places);
-        var message = route.path(from,to,{cost:true});
+        var message = route.path(from,to,{cost:true,trim:true});
         res.status(status).send(message)
     });
 };
@@ -149,7 +148,6 @@ exports.setStatusRoom = function(req,res) {
                 var size = map.length;
                 for(var i = 0; i < size; i++){
                     if(map[i].id == roomId){
-                       // console.log(map[i]);
                         map[i].status =  roomStatus;
                         break;
                     }
@@ -193,7 +191,6 @@ exports.getRoomStatus = function(req,res) {
 function getGraph(places) {
     var graph = new Graph();
     var sizeArray = places.length;
-    //console.log(places);
     for (var i = 0; i < sizeArray; i++) {
         var sizeNeighbors = places[i].neighbors.length;
         var neighbors = places[i].neighbors;
@@ -241,7 +238,6 @@ exports.addComments = function (req,res) {
         });
 
     });
- //
 };
 
 setTimeout(function () {    //wait for mongoose connection established
