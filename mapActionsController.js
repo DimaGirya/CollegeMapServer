@@ -6,7 +6,8 @@ var errorStr = "An error occurred. Error code:";
 var mapToDisplay = undefined;
 var map = undefined;
 console.log("Server start");
-function getMapFromDb(){
+
+function getMapFromDb(){ // get data from DB and calculate map
     if(!DB.isConnectedToDB()){
          mapToDisplay = undefined;
          map = undefined;
@@ -23,16 +24,21 @@ function getMapFromDb(){
     });
 }
 
-exports.getMap = function(req,res) {
+exports.getMap = function(req,res) {    //return map data ( not calculate map)
     console.log("getMap call");
     res.status(200).send(map)
 };
 
-exports.getMapToDisplay = function(req,res) {
+exports.getMapToDisplay = function(req,res) { // return calculate map to display
     console.log("getMapToDisplay call");
     res.status(200).send(mapToDisplay);
 };
 
+
+/*
+    @param: json map data
+    @return: calculate map that client can display to user
+ */
 function calculateMap(places) {
     var map = [];
     var numberOfRows = places.length;
@@ -47,7 +53,14 @@ function calculateMap(places) {
                 while(map[j] === undefined){
                     map.push([]);
                 }
-                 map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false,
+                // map data:
+                // type - type of object (room,hallway,office or other )
+                // status - status of room
+                // in_path - if room in patch
+                // name -  room/object name
+                // border - tempory string that by replace on calculateMapsBorders
+                // if you want to add something to data put it on json her
+                 map[j][k] = {type: place.type, border: "border", status: place.status, place_id: place.id, in_path: false,name:place.name,
                  coord_x:j,coord_y:k};
             }
         }
@@ -56,7 +69,7 @@ function calculateMap(places) {
     return map;
 }
 
-function calculateMapsBorders(map) {
+function calculateMapsBorders(map) {  // this function is set type of boorder for each div
     var mapLength =  map.length;
     for(var y = 0; y <mapLength; y++) {
         var current_row = map[y];
