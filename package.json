@@ -8,6 +8,6 @@
   "dependencies": {
     "express": "~4.13.1",
     "mongoose": "^4.4.19",
-    "node-dijkstra": "^2.2.1"
+    "node-dijkstra": "2.2.1"
   }
 }
